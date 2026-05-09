@@ -25,9 +25,40 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants-section">
+            <p><strong>Participants:</strong></p>
+            <ul>
+              ${details.participants.map(email => `<li>${email} <span class="delete-icon" data-activity="${name}" data-email="${email}">&times;</span></li>`).join('')}
+            </ul>
+          </div>
         `;
 
         activitiesList.appendChild(activityCard);
+
+        // Add event listeners for delete icons
+        activityCard.querySelectorAll('.delete-icon').forEach(icon => {
+          icon.addEventListener('click', async () => {
+            const activity = icon.dataset.activity;
+            const email = icon.dataset.email;
+            try {
+              const response = await fetch(
+                `/activities/${encodeURIComponent(activity)}/participants/${encodeURIComponent(email)}`,
+                {
+                  method: "DELETE",
+                }
+              );
+              if (response.ok) {
+                fetchActivities(); // Refresh the activities list
+              } else {
+                const result = await response.json();
+                alert(result.detail || "Failed to unregister");
+              }
+            } catch (error) {
+              alert("Error unregistering participant");
+              console.error("Error:", error);
+            }
+          });
+        });
 
         // Add option to select dropdown
         const option = document.createElement("option");
